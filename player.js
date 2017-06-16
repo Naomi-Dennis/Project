@@ -4,6 +4,7 @@ class Player {
         this.x = 20;
         this.y = 20;
         this.speed = 4;
+        this.boundingBox = new BoundingBox(this, null);
     }
     render() {
         ctx.fillStyle = "#ffffff"
@@ -33,5 +34,10 @@ class Player {
         }
         this.y -= n;
     }
-
+    interactWithLevel(level) {
+        this.boundingBox.setLevel(level);
+    }
+    detectCollision() {
+        this.boundingBox.detectWallCollision();
+    }
 }

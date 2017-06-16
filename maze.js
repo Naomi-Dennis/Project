@@ -2,7 +2,7 @@
  var visitedStk = [];
  var height = 450 // these numbers were tested, don't change
  var width = 450 // these numbers were tested don't change
- var tile_size = 25;
+ var tile_size = 50;
  var amt_per_side;
  class Cell {
      constructor(nRow, nCol) {
@@ -18,10 +18,9 @@
  class Maze {
      constructor() {
          /*Initialize needed variables. */
-
          amt_per_side = Math.floor(height / tile_size);
          ctx.lineWidth = 7;
-         //  configLineStyle();
+         this.mazeColor = "#21160b"
      }
      init() {
          this.drawBase();
@@ -42,8 +41,10 @@
      }
      drawLine(sX, sY, eX, eY) {
          /*Draw a line from the starting X and Y positions to  the ending X and Y positions*/
-         ctx.moveTo(sX, sY);
-         ctx.lineTo(eX, eY);
+         //ctx.moveTo(sX, sY);
+         //ctx.lineTo(eX, eY);
+         ctx.fillStyle = this.mazeColor;
+         ctx.fillRect(sX, sY, eX, eY)
      }
      drawCell(y, x, side, tile) {
          /* Draw cell based on wall properties */
@@ -52,23 +53,23 @@
          var top = tile.top;
          var bottom = tile.bottom;
          var size = tile_size;
-         ctx.beginPath();
+         var small_size = tile_size / 2;
          if (left) {
-             this.drawLine(x, y, x, y + size);
+             this.drawLine(x, y, small_size, size);
          }
 
          if (right) {
-             this.drawLine(x + size, y, x + size, y + size);
+             this.drawLine(x + size, y, small_size, size);
          }
 
          if (bottom) {
-             this.drawLine(x, y + size, x + size, y + size)
+             this.drawLine(x, y + size, size, small_size)
          }
 
          if (top) {
-             this.drawLine(x, y, x + size, y);
+             this.drawLine(x, y, size, small_size);
          }
-         ctx.stroke();
+         // ctx.stroke();
      }
      drawBase() {
          /* Draw the tiles on the canvas*/

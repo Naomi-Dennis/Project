@@ -1,9 +1,12 @@
 class Display {
     constructor() {
         this.actors = [];
+        this.level = undefined;
     }
     render() {
+        this.level.render();
         for (var i in this.actors) {
+            this.actors[i].detectCollision();
             this.actors[i].render();
         }
     }
@@ -21,5 +24,8 @@ class Display {
     removeActor(actor_to_remove) {
         var index = this.actors.indexOf(actor_to_remove);
         this.actors.splice(index, 1);
+    }
+    setLevel(newLevel) {
+        this.level = newLevel;
     }
 }
