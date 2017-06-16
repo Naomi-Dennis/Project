@@ -4,6 +4,7 @@
  var width = 450 // these numbers were tested don't change
  var tile_size = 50;
  var amt_per_side;
+ var pellets = [];
  class Cell {
      constructor(nRow, nCol) {
          this.row = nRow;
@@ -27,6 +28,8 @@
      }
      render() {
          this.redrawTiles();
+
+
      }
      configLineStyle() {
          // linear gradient from start to end of line
@@ -54,6 +57,8 @@
          var bottom = tile.bottom;
          var size = tile_size;
          var small_size = tile_size / 2;
+
+
          if (left) {
              this.drawLine(x, y, small_size, size);
          }
@@ -103,8 +108,8 @@
          var startRow = Math.floor(Math.random() * tile_size) - 1;
          this.clearCanvas();
          this.drawBase();
-
      }
+
      generateMaze(row, col) {
          /* Depth First Search*/
          var currentTile = tiles[row][col];

@@ -1,12 +1,15 @@
 var canvas;
 var ctx;
+var points = 0;
+var myGame;
 $(document).ready(beginScript);
 
 function beginScript() {
     canvas = $("#mazeCanvas")[0];
     ctx = canvas.getContext("2d");
 
-    var myGame = new Game();
+    myGame = new Game();
+    myGame.start();
     /*
         $('#mazeCanvas').mousemove(function (e) {
             var pos = findPos(this);

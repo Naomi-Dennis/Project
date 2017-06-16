@@ -5,10 +5,16 @@ class Display {
     }
     render() {
         this.level.render();
+        myGame.updatePoints();
+        var currentActor;
         for (var i in this.actors) {
-            this.actors[i].detectCollision();
-            this.actors[i].render();
+            currentActor = this.actors[i];
+            if (currentActor.onStage) {
+                this.actors[i].detectCollision();
+                this.actors[i].render();
+            }
         }
+        console.log("Point: " + points);
     }
     refresh() {
         this.clear();
