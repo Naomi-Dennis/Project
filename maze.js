@@ -5,6 +5,8 @@
  var tile_size = 50;
  var amt_per_side;
  var pellets = [];
+ var path = [];
+ var loaded = false;
  class Cell {
      constructor(nRow, nCol) {
          this.row = nRow;
@@ -14,6 +16,9 @@
          this.right = true;
          this.top = true;
          this.bottom = true;
+         this.pelletCheck = false;
+         this.x = 0;
+         this.y = 0;
      }
  }
  class Maze {
@@ -23,12 +28,12 @@
          ctx.lineWidth = 7;
          this.mazeColor = "#21160b"
      }
-     init() {
+     init(screen) {
+         this.screen = screen;
          this.drawBase();
      }
      render() {
          this.redrawTiles();
-
 
      }
      configLineStyle() {
@@ -83,7 +88,9 @@
              tiles[i] = [];
              for (var j = 0; j < amt_per_side - 1; j++) {
                  tiles[i].push(new Cell(i, j));
-                 this.drawCell(i * side, j * side, side, tiles[i][j]);
+                 tiles[i][j].x = j * side;
+                 tiles[i][j].y = i * side;
+                 this.drawCell(tiles[i][j].x, tiles[i][j].y, side, tiles[i][j]);
              }
          }
          this.generateMaze(0, 0);
@@ -108,8 +115,76 @@
          var startRow = Math.floor(Math.random() * tile_size) - 1;
          this.clearCanvas();
          this.drawBase();
+
      }
 
+     getInitialPlayerLocation() {
+         var currentTile;
+         var locationFound = false;
+         var location = {
+             x: 0,
+             y: 0
+         }
+         for (var row in tiles) {
+             for (var col in tiles) {
+                 currentTile = tiles[row][col];
+                 if (!currentTile.left) {
+                     location.x = currentTile.x;
+                     location.y = currentTile.y + 40;
+                     locationFound = true;
+                     break;
+                 } else if (!currentTile.right) {
+                     location.x = currentTile.x + tile_size;
+                     location.y = currentTile.y + 40;
+                     locationFound = true;
+                     break;
+                 } else if (!currentTile.top) {
+                     location.y = currentTile.y + 40;
+                     location.x = currentTile.x + 40
+                     locationFound = true;
+                     break;
+                 } else if (!currentTile.bottom) {
+                     location.y = currentTile.y + tile_size;
+                     location.x = currentTile.x + 40;
+                     locationFound = true;
+                     break;
+                 };
+             }
+             if (locationFound) {
+                 break;
+             }
+         }
+         return location;
+     }
+     generatePellets() {
+         var currentTile;
+         var newPellet;
+         for (var row in tiles) {
+             for (var col in tiles) {
+
+                 currentTile = tiles[row][col];
+                 newPellet = new Pellet();
+                 if (!currentTile.left) {
+                     newPellet.x = currentTile.x;
+                     newPellet.y = currentTile.y + 40;
+                 } else if (!currentTile.right) {
+                     newPellet.x = currentTile.x + tile_size;
+                     newPellet.y = currentTile.y + 40;
+                 } else if (!currentTile.top) {
+                     newPellet.y = currentTile.y + 40;
+                     newPellet.x = currentTile.x + 40
+                 } else if (!currentTile.bottom) {
+                     newPellet.y = currentTile.y + tile_size;
+                     newPellet.x = currentTile.x + 40;
+                 };
+                 this.screen.addActor(newPellet);
+                 newPellet.interactWithLevel(this)
+                 pellets.push(newPellet);
+             }
+
+         }
+
+     }
      generateMaze(row, col) {
          /* Depth First Search*/
          var currentTile = tiles[row][col];
@@ -127,22 +202,29 @@
          /*If a neighbor is found*/
          else if (neighbor !== undefined) {
              /*Break the wall in between*/
+             var added = false;
              if (neighbor.row > currentTile.row) { /*Bottom*/
                  currentTile.bottom = false;
                  neighbor.top = false;
+                 added = true;
              }
              if (neighbor.row < currentTile.row) { /*Top*/
                  currentTile.top = false;
                  neighbor.bottom = false;
+                 added = true;
              }
              if (neighbor.col < currentTile.col) { /*Left*/
                  currentTile.left = false;
                  neighbor.right = false;
+                 added = true;
              }
              if (neighbor.col > currentTile.col) { /*Right*/
                  currentTile.right = false;
                  neighbor.left = false;
+                 added = true;
              }
+             /* Generate Pellet in free room */
+             (added) ? path.push(currentTile): undefined;
              /*Update Current Tile*/
              currentTile = neighbor;
          }

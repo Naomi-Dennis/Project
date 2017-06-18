@@ -5,6 +5,7 @@ class Display {
     }
     render() {
         this.level.render();
+
         myGame.updatePoints();
         var currentActor;
         for (var i in this.actors) {
@@ -12,9 +13,10 @@ class Display {
             if (currentActor.onStage) {
                 this.actors[i].detectCollision();
                 this.actors[i].render();
+
             }
         }
-        console.log("Point: " + points);
+        console.log("Actors: " + this.actors.length);
     }
     refresh() {
         this.clear();
