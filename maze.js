@@ -79,7 +79,6 @@
          if (top) {
              this.drawLine(x, y, size, small_size);
          }
-         // ctx.stroke();
      }
      drawBase() {
          /* Draw the tiles on the canvas*/
@@ -117,7 +116,57 @@
          this.drawBase();
 
      }
-
+     getEndingLocation() {
+         var max_rows = tiles.length;
+         var max_cols = tiles[0].length;
+         var last_row_quarter = max_rows - Math.floor(max_rows * .25);
+         var last_col_quarter = max_cols - Math.floor(max_cols * .25);
+         var current_row = last_row_quarter;
+         var current_col = last_col_quarter;
+         var locationFound = false;
+         var currentTile;
+         var offset = 30;
+         var location = {
+             x: 0,
+             y: 0
+         }
+         var point = new EndingPoint();
+         for (; current_row < max_rows; current_row++) {
+             for (; current_col < max_cols; current_col++) {
+                 //perform wall check
+                 //  tiles[current_row][current_col] = ending_point;
+                 currentTile = tiles[current_row][current_col];
+                 if (!currentTile.left) {
+                     location.x = currentTile.x;
+                     location.y = currentTile.y + offset;
+                     locationFound = true;
+                     break;
+                 } else if (!currentTile.right) {
+                     location.x = currentTile.x + tile_size;
+                     location.y = currentTile.y + offset;
+                     locationFound = true;
+                     break;
+                 } else if (!currentTile.top) {
+                     location.y = currentTile.y + offset;
+                     location.x = currentTile.x + offset
+                     locationFound = true;
+                     break;
+                 } else if (!currentTile.bottom) {
+                     location.y = currentTile.y + tile_size;
+                     location.x = currentTile.x + offset;
+                     locationFound = true;
+                     break;
+                 };
+             }
+             if (locationFound = true) {
+                 break;
+             }
+         }
+         point.x = location.x;
+         point.y = location.y;
+         this.screen.addActor(point);
+         point.interactWithLevel(this);
+     }
      getInitialPlayerLocation() {
          var currentTile;
          var locationFound = false;

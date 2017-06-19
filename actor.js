@@ -55,13 +55,33 @@ class Player extends Actor {
         this.size = 10;
         this.x = 20;
         this.y = 20;
-        this.speed = 4;
+        this.speed = 2;
         this.onStage = true;
         this.boundingBox = new BoundingBox(this, null)
     }
     detectCollision() {
         this.boundingBox.detectWallCollision();
         this.boundingBox.checkColorCollision()
+    }
+}
+class EndingPoint extends Actor {
+    constructor() {
+        super();
+        this.size = 15;
+        this.boundingBox.collideWithColor("#ffffff", this.loadNextLevel.bind(this));
+    }
+    render() {
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#0000aa"
+        ctx.moveTo(this.x, this.y)
+        ctx.beginPath();
+        ctx.fillRect(this.x, this.y, this.size, this.size);
+        ctx.fillStyle = "#0000ff"
+        ctx.fill()
+        ctx.stroke();
+    }
+    loadNextLevel() {
+        myGame.gotoNextLevel();
     }
 }
 class Pellet extends Actor {

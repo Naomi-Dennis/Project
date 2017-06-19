@@ -1,8 +1,32 @@
 class Game {
     constructor() {
+        this.moveUp = false;
+        this.moveDown = false;
+        this.moveRight = false;
+        this.moveLeft = false;
         this.level = new Maze();
         this.player = new Player();
         this.screen = new Display();
+        this.playerControls();
+
+        this.gotoNextLevel();
+        setInterval(this.updateScreen.bind(this), 16.67);
+
+    }
+    gotoNextLevel() {
+        /*
+            clear the all screen actors
+            Set Level 
+            Init Level with the screen
+            Set initial player location
+            set the level on the screen
+            add the player to the screen
+            generate pellets
+            show the ending location
+            set the player to interact with the new level
+        */
+        this.screen.clearAllActors();
+        this.level = new Maze();
         this.level.init(this.screen);
         var location = this.level.getInitialPlayerLocation();
         this.player.x = location.x;
@@ -10,8 +34,20 @@ class Game {
         this.screen.setLevel(this.level);
         this.screen.addActor(this.player);
         this.level.generatePellets();
+        this.level.getEndingLocation();
         this.player.interactWithLevel(this.level);
-        this.playerControls();
+    }
+    updateScreen() {
+        if (this.moveDown) {
+            this.player.increaseY();
+        } else if (this.moveUp) {
+            this.player.decreaseY();
+        } else if (this.moveRight) {
+            this.player.increaseX();
+        } else if (this.moveLeft) {
+            this.player.decreaseX();
+        }
+        this.screen.refresh();
     }
     start() {
         this.screen.render();
@@ -20,7 +56,8 @@ class Game {
         this.screen.addActor(actor);
     }
     playerControls() {
-        $(document).keypress(this.playerControlHandle(this));
+        $(document).keydown(this.playerControlDown.bind(this))
+        $(document).keyup(this.playerControlUp.bind(this))
     }
     updatePoints() {
         ctx.font = "15px Courier New";
@@ -28,20 +65,26 @@ class Game {
 
         ctx.fillText("Points: " + points.toString(), canvas.width - 100, 15);
     }
-    playerControlHandle(that) {
-        return function (event) {
-            var player = that.player;
-            var screen = that.screen;
-            if (event.which == 97) { //left - a
-                player.decreaseX();
-            } else if (event.which == 100) { //right - d
-                player.increaseX();
-            } else if (event.which == 115) { //down - s 
-                player.increaseY();
-            } else if (event.which == 119) { //up - w
-                player.decreaseY();
-            }
-            screen.refresh();
+    playerControlDown(event) {
+        if (event.which == 65) { //left - a
+            this.moveLeft = true;
+        } else if (event.which == 68) { //right - d
+            this.moveRight = true;
+        } else if (event.which == 83) { //down - s 
+            this.moveDown = true;
+        } else if (event.which == 87) { //up - w
+            this.moveUp = true;
+        }
+    }
+    playerControlUp(event) {
+        if (event.which == 65) { //left - a
+            this.moveLeft = false;
+        } else if (event.which == 68) { //right - d
+            this.moveRight = false;
+        } else if (event.which == 83) { //down - s 
+            this.moveDown = false;
+        } else if (event.which == 87) { //up - w
+            this.moveUp = false;
         }
     }
 }

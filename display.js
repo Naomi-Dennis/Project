@@ -16,7 +16,6 @@ class Display {
 
             }
         }
-        console.log("Actors: " + this.actors.length);
     }
     refresh() {
         this.clear();
@@ -28,6 +27,10 @@ class Display {
     }
     addActor(newActor) {
         this.actors.push(newActor);
+    }
+    clearAllActors() {
+        this.clear();
+        this.actors = [];
     }
     removeActor(actor_to_remove) {
         var index = this.actors.indexOf(actor_to_remove);
