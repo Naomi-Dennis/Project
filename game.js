@@ -1,30 +1,41 @@
 class Game {
     constructor() {
+        this.fireColor = '#ff4907';
+        this.iceColor = '#4286f4';
+        this.windColor = '#eff1f2';
+        this.normalColor = '#777777';
+        this.events = {};
+        this.currentLevel = 0;
         this.moveUp = false;
         this.moveDown = false;
         this.moveRight = false;
         this.moveLeft = false;
+        this.fireShot = false;
+        this.switchToNormalBullets = false;
+        this.switchToFireBullets = false;
+        this.switchToIceBullets = false;
+        this.switchToWindBullets = false;
         this.level = new Maze();
         this.player = new Player();
         this.screen = new Display();
         this.playerControls();
-
         this.gotoNextLevel();
         setInterval(this.updateScreen.bind(this), 16.67);
 
     }
     gotoNextLevel() {
         /*
-            clear the all screen actors
-            Set Level 
-            Init Level with the screen
-            Set initial player location
-            set the level on the screen
-            add the player to the screen
-            generate pellets
-            show the ending location
-            set the player to interact with the new level
+            - Clear the all screen actors
+            - Set Level 
+            - Initialize Level with the screen
+            - Set initial player location
+            - Set the level on the screen
+            - Add the player to the screen
+            - Generate pellets
+            - Show the ending location
+            - Set the player to interact with the new level
         */
+        this.currentLevel++;
         this.screen.clearAllActors();
         this.level = new Maze();
         this.level.init(this.screen);
@@ -33,21 +44,52 @@ class Game {
         this.player.y = location.y;
         this.screen.setLevel(this.level);
         this.screen.addActor(this.player);
-        this.level.generatePellets();
         this.level.getEndingLocation();
+        this.level.generatePellets();
+        this.level.generateTraps(["fire", "ice"]);
         this.player.interactWithLevel(this.level);
     }
     updateScreen() {
         if (this.moveDown) {
+            this.player.direction = "down"
             this.player.increaseY();
         } else if (this.moveUp) {
+            this.player.direction = "up"
             this.player.decreaseY();
         } else if (this.moveRight) {
+            this.player.direction = "right"
             this.player.increaseX();
         } else if (this.moveLeft) {
+            this.player.direction = "left"
             this.player.decreaseX();
         }
+
+
+        if (this.fireShot) {
+            this.fireShot = false;
+            this.player.fireBullet();
+        } else if (this.switchToNormalBullets) {
+            this.player.switchTo("normal");
+        } else if (this.switchToFireBullets) {
+            this.player.switchTo("fire");
+        } else if (this.switchToIceBullets) {
+            this.player.switchTo("ice");
+        } else if (this.switchToWindBullets) {
+            this.player.switchTo("wind");
+        }
+        this.fireEvents();
         this.screen.refresh();
+    }
+    fireEvents() {
+        for (var event_name in this.events) {
+            this.events[event_name]();
+        }
+    }
+    addEvent(event_name, foo) {
+        this.events[event_name] = foo;
+    }
+    removeEvent(event_name) {
+        delete this.events[event_name];
     }
     start() {
         this.screen.render();
@@ -60,10 +102,19 @@ class Game {
         $(document).keyup(this.playerControlUp.bind(this))
     }
     updatePoints() {
+        var offset = 60;
+        this.createText("P:" + points.toString(), canvas.width - offset);
+        this.createText("B:" + this.player.ammo.toString(), canvas.width - (offset) * 2);
+        this.createText("F:" + this.player.fireAmmo.toString(), canvas.width - (offset) * 4);
+        this.createText("I:" + this.player.iceAmmo.toString(), canvas.width - (offset) * 3);
+        this.createText("W:" + this.player.windAmmo.toString(), canvas.width - (offset) * 5);
+    }
+    createText(msg, x, y = 15) {
         ctx.font = "15px Courier New";
+        ctx.beginPath();
         ctx.fillStyle = "#ffffff";
-
-        ctx.fillText("Points: " + points.toString(), canvas.width - 100, 15);
+        ctx.fillText(msg, x - 20, y);
+        ctx.closePath();
     }
     playerControlDown(event) {
         if (event.which == 65) { //left - a
@@ -74,6 +125,18 @@ class Game {
             this.moveDown = true;
         } else if (event.which == 87) { //up - w
             this.moveUp = true;
+        } else if (event.which == 32) {
+            this.fireShot = true;
+        }
+
+        if (event.which == 71) { //switch to normal bullets - g
+            this.switchToNormalBullets = true;
+        } else if (event.which == 72) { //switch to fire bullets = h
+            this.switchToFireBullets = true;
+        } else if (event.which == 74) { //switch to ice bullets = j
+            this.switchToIceBullets = true;
+        } else if (event.which == 75) { //switch to wind bullets = k
+            this.switchToWindBullets = true;
         }
     }
     playerControlUp(event) {
@@ -85,6 +148,18 @@ class Game {
             this.moveDown = false;
         } else if (event.which == 87) { //up - w
             this.moveUp = false;
+        } else if (event.which == 32) {
+            this.fireShot = false;
+        }
+
+        if (event.which == 71) { //switch to normal bullets - g
+            this.switchToNormalBullets = false;
+        } else if (event.which == 72) { //switch to fire bullets = h
+            this.switchToFireBullets = false;
+        } else if (event.which == 74) { //switch to ice bullets = j
+            this.switchToIceBullets = false;
+        } else if (event.which == 75) { //switch to wind bullets = k
+            this.switchToWindBullets = false;
         }
     }
 }
@@ -95,6 +170,8 @@ class BoundingBox {
         this.mob = mob;
         this.level = level;
         this.colors_to_collide = [];
+        this.mobs_to_collide = [];
+        this.nCollisions = 0;
     }
     setLevel(level) {
         this.level = level;
@@ -109,35 +186,81 @@ class BoundingBox {
             x: this.mob.x,
             y: this.mob.y
         };
+        var left_hit
+        var right_hit
+        var top_hit
+        var bottom_hit
+        var position_hit;
         for (var i in this.colors_to_collide) {
             obj = this.colors_to_collide[i];
-            var left_hit = this.getBounding(coords, dimensions, "left", obj.color).left;
-            var right_hit = this.getBounding(coords, dimensions, "right", obj.color).right;
-            var top_hit = this.getBounding(coords, dimensions, "top", obj.color).top;
-            var bottom_hit = this.getBounding(coords, dimensions, "bottom", obj.color).bottom;
-            //console.log("color: " + obj.color + " L: " + left_hit + " R: " + right_hit + " U:" + top_hit + " D:" + bottom_hit)
-            if (left_hit) {
-                obj.handle();
-                break;
-            } else if (right_hit) {
-                obj.handle();
-                break;
-            } else if (top_hit) {
-                obj.handle();
-                break;
-            } else if (bottom_hit) {
-                obj.handle();
-                break;
+            if (obj.target == null) {
+                left_hit = this.getBounding(coords, dimensions, "left", obj.color).left;
+                right_hit = this.getBounding(coords, dimensions, "right", obj.color).right;
+                top_hit = this.getBounding(coords, dimensions, "top", obj.color).top;
+                bottom_hit = this.getBounding(coords, dimensions, "bottom", obj.color).bottom;
+                if (left_hit) {
+                    obj.handle();
+                    break;
+                } else if (right_hit) {
+                    obj.handle();
+                    break;
+                } else if (top_hit) {
+                    obj.handle();
+                    break;
+                } else if (bottom_hit) {
+                    obj.handle();
+                    break;
+                }
+            } else {
+                if (obj.target != null && obj.target.onStage) {
+                    position_hit = this.detectCoordCollision(obj.target)
+                    if (!position_hit) {
+                        continue;
+                    } else {
+                        obj.handle();
+                        break;
+                    }
+                }
             }
         }
     }
-    collideWithColor(newColor, newHandle) {
-        this.colors_to_collide.push({
-            color: newColor,
-            handle: newHandle
-        });
-    }
 
+    collideWithColor(newColor, newHandle, target = null) {
+        var obj = {};
+        var that = this;
+        if (target != null) {
+            obj.color = newColor;
+            obj.handle = newHandle;
+            obj.target = target;
+            obj.bounding = that;
+            obj.id = that.nCollisions;
+        } else {
+            obj.color = newColor;
+            obj.handle = newHandle;
+            obj.bounding = that;
+            obj.id = that.nCollisions;
+        }
+        this.colors_to_collide.push(obj);
+    }
+    removeCollision(collisionObject) {
+        this.colors_to_collide.splice(this.colors_to_collide.indexOf(collisionObject), 1);
+    }
+    detectCoordCollision(mob_to_detect) {
+        var mob = this.mob;
+        var detect_coords = {
+            x: mob_to_detect.x,
+            y: mob_to_detect.y,
+            width: mob_to_detect.width,
+            height: mob_to_detect.height
+        }
+        var maxX = detect_coords.x + detect_coords.width;
+        var maxY = detect_coords.y + detect_coords.height;
+        if (mob.x < maxX && mob.x > detect_coords.x && mob.y > detect_coords.y && mob.y < maxY) {
+            return true;
+        }
+        return false;
+
+    }
     detectWallCollision() {
         var dimensions = {
             width: this.mob.size,

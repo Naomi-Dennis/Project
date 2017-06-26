@@ -5,6 +5,7 @@
  var tile_size = 50;
  var amt_per_side;
  var pellets = [];
+ var traps = [];
  var path = [];
  var loaded = false;
  class Cell {
@@ -26,11 +27,13 @@
          /*Initialize needed variables. */
          amt_per_side = Math.floor(height / tile_size);
          ctx.lineWidth = 7;
-         this.mazeColor = "#21160b"
+         this.mazeColor = "#21160b";
+         this.maxPellets = 0;
      }
      init(screen) {
          this.screen = screen;
          this.drawBase();
+
      }
      render() {
          this.redrawTiles();
@@ -114,7 +117,6 @@
          var startRow = Math.floor(Math.random() * tile_size) - 1;
          this.clearCanvas();
          this.drawBase();
-
      }
      getEndingLocation() {
          var max_rows = tiles.length;
@@ -205,24 +207,57 @@
          }
          return location;
      }
+     generateTraps(trap_type) {
+         var currentTile;
+         var newTrap;
+         var rand_num = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+         var n = 0;
+         for (var row in tiles) {
+             for (var col in tiles) {
+                 this.maxPellets++;
+                 currentTile = tiles[row][col];
+                 newTrap = new ElementTrap(genRandom(trap_type));
+                 n = genRandom(rand_num);
+                 if (n == 2) {
+                     if (!currentTile.left) {
+                         newTrap.x = currentTile.x + 0;
+                         newTrap.y = currentTile.y + newTrap.height;
+                         this.screen.addActor(newTrap);
+                         newTrap.interactWithLevel(this)
+                         traps.push(newTrap);
+                     }
+                     if (!currentTile.right) {
+                         newTrap.x = currentTile.x + tile_size;
+                         newTrap.y = currentTile.y + newTrap.height;
+                         this.screen.addActor(newTrap);
+                         newTrap.interactWithLevel(this)
+                         traps.push(newTrap);
+                     }
+                 }
+             }
+         }
+     }
      generatePellets() {
          var currentTile;
          var newPellet;
          for (var row in tiles) {
              for (var col in tiles) {
-
+                 this.maxPellets++;
                  currentTile = tiles[row][col];
                  newPellet = new Pellet();
                  if (!currentTile.left) {
                      newPellet.x = currentTile.x;
                      newPellet.y = currentTile.y + 40;
-                 } else if (!currentTile.right) {
+                 }
+                 if (!currentTile.right) {
                      newPellet.x = currentTile.x + tile_size;
                      newPellet.y = currentTile.y + 40;
-                 } else if (!currentTile.top) {
+                 }
+                 if (!currentTile.top) {
                      newPellet.y = currentTile.y + 40;
                      newPellet.x = currentTile.x + 40
-                 } else if (!currentTile.bottom) {
+                 }
+                 if (!currentTile.bottom) {
                      newPellet.y = currentTile.y + tile_size;
                      newPellet.x = currentTile.x + 40;
                  };
@@ -230,9 +265,7 @@
                  newPellet.interactWithLevel(this)
                  pellets.push(newPellet);
              }
-
          }
-
      }
      generateMaze(row, col) {
          /* Depth First Search*/

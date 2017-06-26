@@ -26,6 +26,12 @@ function beginScript() {
     // $("#newMazeBtn").click(this.reDrawMaze.bind(this));
 }
 
+function genRandom(array) {
+    var length = array.length;
+    var index = Math.round(Math.random() * (length - 1)) + 1
+    return array[index - 1];
+}
+
 function findPos(obj) {
     var curleft = 0,
         curtop = 0;
